@@ -172,6 +172,8 @@ class Projects(
         ):
             mlrun.api.crud.Logs().delete_logs(name)
 
+        mlrun.api.crud.Events().delete_alert_events(name)
+
         # delete db resources
         mlrun.api.utils.singletons.db.get_db().delete_project_related_resources(
             session, name
