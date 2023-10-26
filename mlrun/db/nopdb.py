@@ -662,3 +662,21 @@ class NopDB(RunDBInterface):
         self, project: str, image: str = "mlrun/mlrun"
     ) -> None:
         raise NotImplementedError
+
+    def generate_event(self, name, event_data, project=""):
+        pass
+
+    def store_alert_config(self, alert_name, alert_data, project=""):
+        pass
+
+    def get_alert_config(self, alert_name, project=""):
+        pass
+
+    def list_alerts_configs(self, project=""):
+        pass
+
+    def delete_alert_config(self, alert_name, project=""):
+        pass
+
+    def reset_alert_config(self, alert_name, project=""):
+        pass
