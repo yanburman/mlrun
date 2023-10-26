@@ -812,6 +812,12 @@ class BatchProcessor:
                 drift_measure=drift_measure,
             )
 
+            self._generate_event_on_drift(
+                endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.UID],
+                drift_status,
+                drift_measure,
+            )
+
             attributes = {
                 "current_stats": json.dumps(current_stats),
                 "drift_measures": json.dumps(drift_result),
@@ -861,6 +867,25 @@ class BatchProcessor:
                 mlrun.common.schemas.model_monitoring.EventFieldType.UID
             ],
         )
+
+    def _generate_event_on_drift(self, uid, drift_status, drift_measure):
+        if (
+            drift_status
+            == mlrun.common.schemas.model_monitoring.DriftStatus.DRIFT_DETECTED
+            or drift_status
+            == mlrun.common.schemas.model_monitoring.DriftStatus.POSSIBLE_DRIFT
+        ):
+            entity = {"kind": "model", "project": self.project, "id": uid}
+            event_kind = (
+                "drift_detected"
+                if drift_status
+                == mlrun.common.schemas.model_monitoring.DriftStatus.DRIFT_DETECTED
+                else "drift_suspected"
+            )
+            event_data = mlrun.common.schemas.Event(
+                kind=event_kind, entity=entity, value=drift_measure
+            ).dict()
+            mlrun.get_run_db().generate_event(event_kind, event_data)
 
     def _get_interval_range(self) -> Tuple[datetime.datetime, datetime.datetime]:
         """Getting batch interval time range"""
