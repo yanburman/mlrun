@@ -3724,6 +3724,21 @@ class SQLDB(DBInterface):
         )
         alert.count = state.count
 
+        def _adjust_obj(notif):
+            notif = notif.to_dict()
+            del notif["secret_params"]
+
+            if not isinstance(notif["when"], list):
+                notif["when"] = [notif["when"]]
+            return notif
+
+        alert.notifications = [
+            mlrun.common.schemas.notification.Notification(**_adjust_obj(x))
+            for x in self._get_db_notifications(
+                session, AlertConfig, parent_id=alert.id
+            )
+        ]
+
     @staticmethod
     def _transform_alert_config_record_to_schema(
         alert_config_record: AlertConfig,
