@@ -451,6 +451,7 @@ class HTTPRunDB(RunDBInterface):
                     setattr(
                         config.feature_store.data_prefixes, prefix, server_prefix_value
                     )
+            config.alerts.mode = server_cfg.get("alerts_mode") or config.alerts.mode
 
         except Exception as exc:
             logger.warning(

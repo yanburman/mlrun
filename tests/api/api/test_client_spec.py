@@ -90,6 +90,9 @@ def test_client_spec(
         "requests": {"cpu": "25m", "memory": "1M", "gpu": ""},
         "limits": {"cpu": "2", "memory": "1G", "gpu": ""},
     }
+
+    mlrun.mlconf.alerts.mode = "enabled"
+
     response = client.get("client-spec")
     assert response.status_code == http.HTTPStatus.OK.value
     response_body = response.json()
@@ -123,6 +126,8 @@ def test_client_spec(
     )
     assert response_body["ce_mode"] == response_body["ce"]["mode"] == ce_mode
     assert response_body["ce"]["release"] == ce_release
+
+    assert response_body["alerts_mode"] == "enabled"
 
 
 def test_client_spec_response_based_on_client_version(

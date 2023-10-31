@@ -812,11 +812,15 @@ class BatchProcessor:
                 drift_measure=drift_measure,
             )
 
-            self._generate_event_on_drift(
-                endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.UID],
-                drift_status,
-                drift_measure,
-            )
+            if (
+                mlrun.mlconf.alerts.mode
+                == mlrun.common.schemas.alert.AlertsModes.enabled
+            ):
+                self._generate_event_on_drift(
+                    endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.UID],
+                    drift_status,
+                    drift_measure,
+                )
 
             attributes = {
                 "current_stats": json.dumps(current_stats),
