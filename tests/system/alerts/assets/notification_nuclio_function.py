@@ -25,37 +25,29 @@ def handler(context, event):
     # Extract the operation and data from the event data
     operation = event_data.get("operation")
     data = event_data.get("data")
+    response = {}
 
     # Perform actions based on the provided operation
     if operation == "add":
         context.user_data.data_list.append(data)
-        response = {"message": "Object added successfully", "status_code": 200}
 
     elif operation == "get":
         if context.user_data.data_list:
             element = context.user_data.data_list[0]
-            response = {"element": element, "status_code": 200}
-        else:
-            response = {"message": "List is empty", "status_code": 400}
+            response = {"element": element}
 
     elif operation == "delete":
         if context.user_data.data_list:
-            deleted_element = context.user_data.data_list.pop(0)
-            response = {
-                "message": f"First element '{deleted_element}' deleted",
-                "status_code": 200,
-            }
-        else:
-            response = {"message": "List is empty", "status_code": 400}
+            context.user_data.data_list.pop(0)
 
     elif operation == "list":
-        response = {"data_list": context.user_data.data_list, "status_code": 200}
+        response = {"data_list": context.user_data.data_list}
 
     elif operation == "reset":
         context.user_data.data_list.clear()
-        response = {"message": "List was reset successfully", "status_code": 200}
 
-    else:
-        response = {"message": "Invalid operation", "status_code": 400}
+    # Convert the response dictionary to a JSON string
+    response_json = json.dumps(response)
 
-    return json.dumps(response)
+    # Return the response JSON
+    return response_json
