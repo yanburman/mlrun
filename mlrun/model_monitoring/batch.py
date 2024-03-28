@@ -686,17 +686,6 @@ class BatchProcessor:
                 drift_status=drift_status.value,
                 drift_measure=drift_measure,
             )
-
-            if (
-                mlrun.mlconf.alerts.mode
-                == mlrun.common.schemas.alert.AlertsModes.enabled
-            ):
-                self._generate_event_on_drift(
-                    endpoint[mlrun.common.schemas.model_monitoring.EventFieldType.UID],
-                    drift_status,
-                    drift_measure,
-                )
-
             attributes = {
                 "current_stats": json.dumps(current_stats),
                 "drift_measures": json.dumps(drift_result),
@@ -761,23 +750,6 @@ class BatchProcessor:
         )
         end_time = datetime.datetime.now()
         return start_time, end_time
-
-    def _generate_event_on_drift(self, uid, drift_status, drift_measure):
-        if drift_status in [
-            mlrun.common.schemas.model_monitoring.DriftStatus.DRIFT_DETECTED,
-            mlrun.common.schemas.model_monitoring.DriftStatus.POSSIBLE_DRIFT,
-        ]:
-            entity = {"kind": "model", "project": self.project, "id": uid}
-            event_kind = (
-                "drift_detected"
-                if drift_status
-                == mlrun.common.schemas.model_monitoring.DriftStatus.DRIFT_DETECTED
-                else "drift_suspected"
-            )
-            event_data = mlrun.common.schemas.Event(
-                kind=event_kind, entity=entity, value=drift_measure
-            ).dict()
-            mlrun.get_run_db().generate_event(event_kind, event_data)
 
     def _parse_batch_dict_str(self):
         """Convert batch dictionary string into a valid dictionary"""

@@ -695,7 +695,6 @@ def _monitor_runs_and_push_terminal_notifications(db_session):
 
         _last_update_time = now
     except Exception as exc:
-        # yacouby: not sure if this exception handle is right.. can generate event return exception ?
         logger.warning(
             "Failed pushing terminal run notifications. Ignoring",
             exc=err_to_str(exc),
