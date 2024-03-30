@@ -641,15 +641,15 @@ class RunDBInterface(ABC):
         pass
 
     @abstractmethod
-    def create_alert_config(self, name, alert_data, project=""):
+    def create_alert_config(self, alert_name, alert_data, project=""):
         pass
 
     @abstractmethod
-    def store_alert_config(self, alert_id, alert_data, project=""):
+    def store_alert_config(self, alert_name, alert_data, project=""):
         pass
 
     @abstractmethod
-    def get_alert_config(self, alert_id, project=""):
+    def get_alert_config(self, alert_name, project=""):
         pass
 
     @abstractmethod
@@ -657,11 +657,11 @@ class RunDBInterface(ABC):
         pass
 
     @abstractmethod
-    def delete_alert_config(self, alert_id, project=""):
+    def delete_alert_config(self, alert_name, project=""):
         pass
 
     @abstractmethod
-    def reset_alert_config(self, alert_id, project=""):
+    def reset_alert_config(self, alert_name, project=""):
         pass
 
     def get_builder_status(
