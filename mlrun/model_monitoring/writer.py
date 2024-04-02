@@ -24,6 +24,7 @@ from v3io_frames.errors import Error as V3IOFramesError
 from v3io_frames.frames_pb2 import IGNORE
 
 import mlrun.common.model_monitoring
+import mlrun.common.schemas.alert as alert_constants
 import mlrun.model_monitoring
 import mlrun.utils.v3io_clients
 from mlrun.common.schemas.model_monitoring.constants import ResultStatusApp, WriterEvent
@@ -94,11 +95,15 @@ Extra data: `{self._event[WriterEvent.RESULT_EXTRA_DATA]}`\
             drift_status == ResultStatusApp.detected
             or drift_status == ResultStatusApp.potential_detection
         ):
-            entity = {"kind": "model", "project": project_name, "id": uid}
+            entity = {
+                "kind": alert_constants.EventEntityKind.MODEL,
+                "project": project_name,
+                "id": uid,
+            }
             event_kind = (
-                "drift_detected"
+                alert_constants.EventKind.DRIFT_DETECTED
                 if drift_status == ResultStatusApp.detected
-                else "drift_suspected"
+                else alert_constants.EventKind.DRIFT_SUSPECTED
             )
             event_data = mlrun.common.schemas.Event(
                 kind=event_kind, entity=entity, value=drift_value

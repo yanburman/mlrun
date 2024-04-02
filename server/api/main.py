@@ -26,6 +26,7 @@ import sqlalchemy.orm
 from fastapi.exception_handlers import http_exception_handler
 
 import mlrun.common.schemas
+import mlrun.common.schemas.alert as alert_constants
 import mlrun.errors
 import mlrun.lists
 import mlrun.utils
@@ -776,14 +777,20 @@ def _generate_event_on_failed_runs(
     for run in runs:
         project = run["metadata"]["project"]
         uid = run["metadata"]["uid"]
-        entity = {"kind": "job", "project": project, "id": uid}
-        event_data = mlrun.common.schemas.Event(kind="failed", entity=entity)
-        mlrun.get_run_db().generate_event("failed", event_data)
+        entity = {
+            "kind": alert_constants.EventEntityKind.JOB,
+            "project": project,
+            "id": uid,
+        }
+        event_data = mlrun.common.schemas.Event(
+            kind=alert_constants.EventKind.FAILED, entity=entity
+        )
+        mlrun.get_run_db().generate_event(alert_constants.EventKind.FAILED, event_data)
 
         server.api.crud.Events().process_event(
             session=db_session,
             event_data=event_data,
-            event_name="failed",
+            event_name=alert_constants.EventKind.FAILED,
             project=project,
             validate_event=True,
         )
