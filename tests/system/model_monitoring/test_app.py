@@ -322,14 +322,14 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
 
     @classmethod
     def _create_alert_config(
-            cls,
-            project,
-            name,
-            entity_kind,
-            summary,
-            event_name,
-            nuclio_function_url,
-            criteria=None,
+        cls,
+        project,
+        name,
+        entity_kind,
+        summary,
+        event_name,
+        nuclio_function_url,
+        criteria=None,
     ):
         notifications = [
             {
