@@ -434,6 +434,7 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
         )
 
         self._infer(serving_fn, with_training_set=with_training_set)
+
         # mark the first window as "done" with another request
         time.sleep(
             self.app_interval_seconds
@@ -447,6 +448,9 @@ class TestMonitoringAppFlow(TestMLRunSystem, _V3IORecordsChecker):
         self._test_v3io_records(
             ep_id=self._get_model_endpoint_id(), inputs=inputs, outputs=outputs
         )
+
+        # Validate that the notifications were sent on the drift
+        self._validate_notifications_on_nuclio(nuclio_function_url)
 
         # Validate that the notifications were sent on the drift
         self._validate_notifications_on_nuclio(nuclio_function_url)
