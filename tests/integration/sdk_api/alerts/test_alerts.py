@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import json
-from http import HTTPStatus
 
 import pydantic.error_wrappers
 import pytest
@@ -25,7 +23,7 @@ import tests.integration.sdk_api.base
 
 
 class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
-    def test_basic_alerts(self):
+    def test_alert_operations(self):
         project_name = "my-project"
 
         # Define parameters for alert 1
@@ -131,7 +129,7 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
 
         mlrun.get_run_db().delete_project(project_name)
 
-    def test_basic_alerts2(self):
+    def test_alert_after_project_deletion(self):
         # this test checks create alert and post event operations after deleting a project and creating it again
         # with the same alert and event names
 
@@ -189,10 +187,9 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
                 alert1["event_name"],
             )
 
-        """ TODO: uncomment after handled
         # create alert with invalid entity project
         invalid_entity_project = "no_such_project"
-        with pytest.raises(mlrun.errors.MLRunNotFoundError):
+        with pytest.raises(mlrun.errors.MLRunBadRequestError):
             self._create_alert(
                 project_name,
                 alert1["name"],
@@ -201,7 +198,6 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
                 alert1["summary"],
                 alert1["event_name"],
             )
-        """
 
         # create alert with invalid severity
         invalid_severity = "critical"
@@ -387,7 +383,6 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
             self._modify_alert(
                 project_name,
                 alert_name,
-                alert1["name"],
                 alert1["entity"]["kind"],
                 alert1["entity"]["project"],
                 alert1["summary"],
@@ -399,7 +394,6 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
         modified_alert = self._modify_alert(
             project_name,
             alert_name,
-            alert1["name"],
             alert1["entity"]["kind"],
             alert1["entity"]["project"],
             new_summary,
@@ -415,7 +409,6 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
             new_summary,
             alert1["state"],
             new_event_name,
-            alert_name,
         )
 
         return modified_alert
@@ -433,29 +426,25 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
         notifications=None,
         reset_policy="manual",
     ):
-        response = mlrun.get_run_db().api_call(
-            "POST",
-            f"projects/{project_name}/alerts/{alert_name}",
-            body=self._generate_alert_create_request(
-                project_name,
-                alert_name,
-                alert_entity_kind,
-                alert_entity_project,
-                alert_summary,
-                event_name,
-                severity,
-                criteria,
-                notifications,
-                reset_policy,
-            ),
+        alert_data = self._generate_alert_create_request(
+            project_name,
+            alert_name,
+            alert_entity_kind,
+            alert_entity_project,
+            alert_summary,
+            event_name,
+            severity,
+            criteria,
+            notifications,
+            reset_policy,
         )
-        assert response.status_code == HTTPStatus.OK.value
-        return json.loads(response.text)
+        return mlrun.get_run_db().create_alert_config(
+            alert_name, alert_data, project_name
+        )
 
     def _modify_alert(
         self,
         project_name,
-        alert_id,
         alert_name,
         alert_entity_kind,
         alert_entity_project,
@@ -466,61 +455,43 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
         notifications=None,
         reset_policy="manual",
     ):
-        response = mlrun.get_run_db().api_call(
-            "PUT",
-            f"projects/{project_name}/alerts/{alert_name}",
-            body=self._generate_alert_create_request(
-                project_name,
-                alert_name,
-                alert_entity_kind,
-                alert_entity_project,
-                alert_summary,
-                event_name,
-                severity,
-                criteria,
-                notifications,
-                reset_policy,
-            ),
+        alert_data = self._generate_alert_create_request(
+            project_name,
+            alert_name,
+            alert_entity_kind,
+            alert_entity_project,
+            alert_summary,
+            event_name,
+            severity,
+            criteria,
+            notifications,
+            reset_policy,
         )
-        assert response.status_code == HTTPStatus.OK.value
-        return json.loads(response.text)
+        return mlrun.get_run_db().store_alert_config(
+            alert_name, alert_data, project_name
+        )
 
     def _post_event(self, project_name, event_name, alert_entity_kind):
-        response = mlrun.get_run_db().api_call(
-            "POST",
-            f"projects/{project_name}/events/{event_name}",
-            body=self._generate_event_request(
-                project_name, event_name, alert_entity_kind
-            ),
+        event_data = self._generate_event_request(
+            project_name, event_name, alert_entity_kind
         )
-        assert response.status_code == HTTPStatus.OK.value
+        mlrun.get_run_db().generate_event(event_name, event_data)
 
     @staticmethod
     def _get_alerts(project_name, name=None):
         if name:
-            response = mlrun.get_run_db().api_call(
-                "GET", f"projects/{project_name}/alerts/{name}"
-            )
+            response = mlrun.get_run_db().get_alert_config(name, project_name)
         else:
-            response = mlrun.get_run_db().api_call(
-                "GET", f"projects/{project_name}/alerts"
-            )
-        assert response.status_code == HTTPStatus.OK.value
-        return json.loads(response.text)
+            response = mlrun.get_run_db().list_alerts_configs(project_name)
+        return response
 
     @staticmethod
     def _reset_alert(project_name, name):
-        response = mlrun.get_run_db().api_call(
-            "POST", f"projects/{project_name}/alerts/{name}/reset"
-        )
-        assert response.status_code == HTTPStatus.OK.value
+        mlrun.get_run_db().reset_alert_config(name, project_name)
 
     @staticmethod
     def _delete_alert(project_name, name):
-        response = mlrun.get_run_db().api_call(
-            "DELETE", f"projects/{project_name}/alerts/{name}"
-        )
-        assert response.status_code == HTTPStatus.NO_CONTENT.value
+        mlrun.get_run_db().delete_alert_config(name, project_name)
 
     @staticmethod
     def _validate_alert(
@@ -530,7 +501,6 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
         alert_summary=None,
         alert_state=None,
         alert_event_name=None,
-        alert_id=None,
     ):
         if project_name:
             assert alert["project"] == project_name
@@ -545,12 +515,11 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
 
     @staticmethod
     def _generate_event_request(project, event_kind, entity_kind):
-        request = mlrun.common.schemas.Event(
+        return mlrun.common.schemas.Event(
             kind=event_kind,
             entity={"kind": entity_kind, "project": project, "id": 1234},
             value=0.2,
         ).dict()
-        return mlrun.utils.dict_to_json(request)
 
     @staticmethod
     def _generate_alert_create_request(
@@ -579,7 +548,7 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
                     "condition": "oops",
                 },
             ]
-        request = mlrun.common.schemas.AlertConfig(
+        return mlrun.common.schemas.AlertConfig(
             project=project,
             name=name,
             summary=summary,
@@ -590,4 +559,3 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
             notifications=notifications,
             reset_policy=reset_policy,
         ).dict()
-        return mlrun.utils.dict_to_json(request)

@@ -237,7 +237,7 @@ class Alerts(
             and Alerts._string2datetime(alert.criteria.period) is None
         ):
             raise mlrun.errors.MLRunBadRequestError(
-                f"Invalid period ({alert.criteria.period}) specified for for alert {name} for project {project}"
+                f"Invalid period ({alert.criteria.period}) specified for alert {name} for project {project}"
             )
 
         for notification in alert.notifications:
@@ -253,6 +253,11 @@ class Alerts(
                 notification.dict()
             )
             notification_object.validate_notification()
+
+        if alert.entity.project != project:
+            raise mlrun.errors.MLRunBadRequestError(
+                f"Invalid alert entity project ({alert.entity.project}) for alert {name} for project {project}"
+            )
 
     @staticmethod
     def _string2datetime(date_str):
