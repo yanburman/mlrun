@@ -21,6 +21,7 @@ import mlrun.common.schemas
 import mlrun.common.schemas.alert as alert_constants
 import mlrun.utils
 import tests.integration.sdk_api.base
+from mlrun.utils import logger
 
 
 class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
@@ -176,82 +177,6 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
         self._post_event(alert_entity_project, event_name, alert_entity_kind)
 
     def _create_alerts_test(self, project_name, alert1, alert2):
-        # create alert with non-existent project
-        invalid_project = "no_such_project"
-        with pytest.raises(mlrun.errors.MLRunNotFoundError):
-            self._create_alert(
-                invalid_project,
-                alert1["name"],
-                alert1["entity"]["kind"],
-                alert1["entity"]["project"],
-                alert1["summary"],
-                alert1["event_name"],
-            )
-
-        # create alert with invalid entity kind
-        invalid_entity_kind = "endpoint"
-        with pytest.raises(pydantic.error_wrappers.ValidationError):
-            self._create_alert(
-                project_name,
-                alert1["name"],
-                invalid_entity_kind,
-                alert1["entity"]["project"],
-                alert1["summary"],
-                alert1["event_name"],
-            )
-
-        # create alert with invalid entity project
-        invalid_entity_project = "no_such_project"
-        with pytest.raises(mlrun.errors.MLRunBadRequestError):
-            self._create_alert(
-                project_name,
-                alert1["name"],
-                alert1["entity"]["kind"],
-                invalid_entity_project,
-                alert1["summary"],
-                alert1["event_name"],
-            )
-
-        # create alert with invalid severity
-        invalid_severity = "critical"
-        with pytest.raises(pydantic.error_wrappers.ValidationError):
-            self._create_alert(
-                project_name,
-                alert1["name"],
-                alert1["entity"]["kind"],
-                alert1["entity"]["project"],
-                alert1["summary"],
-                alert1["event_name"],
-                severity=invalid_severity,
-            )
-
-        # create alert with invalid criteria period
-        invalid_criteria = {"period": "abc"}  # for example, it should be "1h"
-        with pytest.raises(mlrun.errors.MLRunBadRequestError):
-            self._create_alert(
-                project_name,
-                alert1["name"],
-                alert1["entity"]["kind"],
-                alert1["entity"]["project"],
-                alert1["summary"],
-                alert1["event_name"],
-                criteria=invalid_criteria,
-            )
-
-        # create alert with invalid reset policy
-        invalid_policy = "scheduled"
-        with pytest.raises(pydantic.error_wrappers.ValidationError):
-            self._create_alert(
-                project_name,
-                alert1["name"],
-                alert1["entity"]["kind"],
-                alert1["entity"]["project"],
-                alert1["summary"],
-                alert1["event_name"],
-                reset_policy=invalid_policy,
-            )
-
-        # create alert with invalid notification kind
         invalid_notification = [
             {
                 "kind": "invalid",
@@ -265,18 +190,6 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
                 },
             },
         ]
-        with pytest.raises(pydantic.error_wrappers.ValidationError):
-            self._create_alert(
-                project_name,
-                alert1["name"],
-                alert1["entity"]["kind"],
-                alert1["entity"]["project"],
-                alert1["summary"],
-                alert1["event_name"],
-                notifications=invalid_notification,
-            )
-
-        # create alert with two notifications with the same name - should fail
         duplicated_names_notifications = [
             {
                 "kind": "slack",
@@ -301,16 +214,78 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
                 },
             },
         ]
-        with pytest.raises(mlrun.errors.MLRunBadRequestError):
-            self._create_alert(
-                project_name,
-                alert1["name"],
-                alert1["entity"]["kind"],
-                alert1["entity"]["project"],
-                alert1["summary"],
-                alert1["event_name"],
-                notifications=duplicated_names_notifications,
-            )
+
+        expectations = [
+            {
+                "param_name": "project_name",
+                "param_value": "no_such_project",
+                "exception": mlrun.errors.MLRunNotFoundError,
+                "case": "testing create alert with non-existent project",
+            },
+            {
+                "param_name": "alert_entity_kind",
+                "param_value": "endpoint",
+                "exception": pydantic.error_wrappers.ValidationError,
+                "case": "testing create alert with invalid entity kind",
+            },
+            {
+                "param_name": "alert_entity_project",
+                "param_value": "no_such_project",
+                "exception": mlrun.errors.MLRunBadRequestError,
+                "case": "testing create alert with invalid entity project",
+            },
+            {
+                "param_name": "severity",
+                "param_value": "critical",
+                "exception": pydantic.error_wrappers.ValidationError,
+                "case": "testing create alert with invalid severity",
+            },
+            {
+                "param_name": "criteria",
+                "param_value": {"period": "abc"},
+                "exception": mlrun.errors.MLRunBadRequestError,
+                "case": "testing create alert with invalid criteria period",
+            },
+            {
+                "param_name": "reset_policy",
+                "param_value": "scheduled",
+                "exception": pydantic.error_wrappers.ValidationError,
+                "case": "testing create alert with invalid reset policy",
+            },
+            {
+                "param_name": "notifications",
+                "param_value": invalid_notification,
+                "exception": pydantic.error_wrappers.ValidationError,
+                "case": "testing create alert with invalid notification kind",
+            },
+            {
+                "param_name": "notifications",
+                "param_value": duplicated_names_notifications,
+                "exception": mlrun.errors.MLRunBadRequestError,
+                "case": "testing create alert with two notifications with the same name",
+            },
+        ]
+        args = {
+            "project_name": project_name,
+            "alert_name": alert1["name"],
+            "alert_entity_kind": alert1["entity"]["kind"],
+            "alert_entity_project": alert1["entity"]["project"],
+            "alert_summary": alert1["summary"],
+            "event_name": alert1["event_name"],
+            "severity": alert_constants.AlertSeverity.LOW,
+            "criteria": None,
+            "notifications": None,
+            "reset_policy": alert_constants.ResetPolicy.MANUAL,
+        }
+        for expectation in expectations:
+            name = expectation["param_name"]
+            value = expectation["param_value"]
+            exception = expectation["exception"]
+            case = expectation["case"]
+            logger.info(case)
+            new_args = dict(args, **{name: value})
+            with pytest.raises(exception):
+                self._create_alert(**new_args)
 
         # create alert with no errors
         created_alert = self._create_alert(
@@ -330,7 +305,7 @@ class TestAlerts(tests.integration.sdk_api.base.TestMLRunIntegration):
             alert1["event_name"],
         )
 
-        # create another alert
+        # create another alert with no errors
         notifications = [
             {
                 "kind": "slack",
