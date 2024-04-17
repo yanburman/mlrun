@@ -3801,8 +3801,8 @@ class MlrunProject(ModelObj):
     def store_alert_config(self, alert_data: AlertConfig, alert_name=None):
         """
         Create/modify an alert.
-        :param alert_data: the data of the alert.
-        :param alert_name: name of the alert.
+        :param alert_data: The data of the alert.
+        :param alert_name: The name of the alert.
         :return: the created/modified alert.
         """
         db = mlrun.db.get_run_db(secrets=self._secrets)
@@ -3813,8 +3813,8 @@ class MlrunProject(ModelObj):
     def get_alert_config(self, alert_name: str) -> AlertConfig:
         """
         Retrieve an alert.
-        :param alert_name: name of the alert to retrieve.
-        :return: the alert object.
+        :param alert_name: The name of the alert to retrieve.
+        :return: The alert object.
         """
         db = mlrun.db.get_run_db(secrets=self._secrets)
         return db.get_alert_config(alert_name, self.metadata.name)
@@ -3822,7 +3822,7 @@ class MlrunProject(ModelObj):
     def list_alerts_configs(self):
         """
         Retrieve list of alerts of a project.
-        :return: all the alerts objects of the project.
+        :return: All the alerts objects of the project.
         """
         db = mlrun.db.get_run_db(secrets=self._secrets)
         return db.list_alerts_configs(self.metadata.name)
@@ -3832,8 +3832,8 @@ class MlrunProject(ModelObj):
     ):
         """
         Delete an alert.
-        :param alert_data: the data of the alert.
-        :param alert_name: name of the alert to delete.
+        :param alert_data: The data of the alert.
+        :param alert_name: The name of the alert to delete.
         """
         if alert_data is None and alert_name is None:
             raise ValueError(
@@ -3851,8 +3851,8 @@ class MlrunProject(ModelObj):
     ):
         """
         Reset an alert.
-        :param alert_data: the data of the alert.
-        :param alert_name: name of the alert to reset.
+        :param alert_data: The data of the alert.
+        :param alert_name: The name of the alert to reset.
         """
         if alert_data is None and alert_name is None:
             raise ValueError(

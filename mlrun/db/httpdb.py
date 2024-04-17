@@ -3828,9 +3828,9 @@ class HTTPRunDB(RunDBInterface):
     ):
         """
         Generate an event.
-        :param name: name of the event.
-        :param event_data: the data of the event.
-        :param project: project that the event belongs to.
+        :param name: The name of the event.
+        :param event_data: The data of the event.
+        :param project: The project that the event belongs to.
         """
         project = project or config.default_project
         endpoint_path = f"projects/{project}/events/{name}"
@@ -3849,10 +3849,10 @@ class HTTPRunDB(RunDBInterface):
     ):
         """
         Create/modify an alert.
-        :param alert_name: name of the alert.
-        :param alert_data: the data of the alert.
-        :param project: project that the alert belongs to.
-        :return: the created/modified alert.
+        :param alert_name: The name of the alert.
+        :param alert_data: The data of the alert.
+        :param project: the project that the alert belongs to.
+        :return: The created/modified alert.
         """
         project = project or config.default_project
         endpoint_path = f"projects/{project}/alerts/{alert_name}"
@@ -3866,9 +3866,9 @@ class HTTPRunDB(RunDBInterface):
     def get_alert_config(self, alert_name: str, project=""):
         """
         Retrieve an alert.
-        :param alert_name: name of the alert to retrieve.
-        :param project: project that the alert belongs to.
-        :return: the alert object.
+        :param alert_name: The name of the alert to retrieve.
+        :param project: The project that the alert belongs to.
+        :return: The alert object.
         """
         project = project or config.default_project
         endpoint_path = f"projects/{project}/alerts/{alert_name}"
@@ -3879,8 +3879,8 @@ class HTTPRunDB(RunDBInterface):
     def list_alerts_configs(self, project=""):
         """
         Retrieve list of alerts of a project.
-        :param project: Project name.
-        :return: all the alerts objects of the project.
+        :param project: The project name.
+        :return: All the alerts objects of the project.
         """
         project = project or config.default_project
         endpoint_path = f"projects/{project}/alerts"
@@ -3894,8 +3894,8 @@ class HTTPRunDB(RunDBInterface):
     def delete_alert_config(self, alert_name: str, project=""):
         """
         Delete an alert.
-        :param alert_name: name of the alert to delete.
-        :param project: project that the alert belongs to.
+        :param alert_name: The name of the alert to delete.
+        :param project: The project that the alert belongs to.
         """
         project = project or config.default_project
         endpoint_path = f"projects/{project}/alerts/{alert_name}"
@@ -3905,8 +3905,8 @@ class HTTPRunDB(RunDBInterface):
     def reset_alert_config(self, alert_name: str, project=""):
         """
         Reset an alert.
-        :param alert_name: name of the alert to reset.
-        :param project: project that the alert belongs to.
+        :param alert_name: The name of the alert to reset.
+        :param project: The project that the alert belongs to.
         """
         project = project or config.default_project
         endpoint_path = f"projects/{project}/alerts/{alert_name}/reset"
