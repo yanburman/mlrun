@@ -173,7 +173,9 @@ class ModelMonitoringWriter(StepToDict):
             )
 
     @staticmethod
-    def _generate_event_on_drift(uid, drift_status, drift_value, project_name):
+    def _generate_event_on_drift(
+        uid: str, drift_status: str, drift_value: float, project_name: str
+    ):
         if (
             drift_status == ResultStatusApp.detected
             or drift_status == ResultStatusApp.potential_detection
