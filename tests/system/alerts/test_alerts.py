@@ -118,7 +118,7 @@ class TestAlerts(TestMLRunSystem):
 
         data = {
             mm_constants.WriterEvent.ENDPOINT_ID: endpoint_id,
-            mm_constants.WriterEvent.APPLICATION_NAME: mm_constants.MLRUN_HISTOGRAM_DATA_DRIFT_APP_NAME,
+            mm_constants.WriterEvent.APPLICATION_NAME: mm_constants.HistogramDataDriftApplicationConstants.NAME,
             mm_constants.WriterEvent.RESULT_NAME: "data_drift_test",
             mm_constants.WriterEvent.RESULT_VALUE: 0.5,
             mm_constants.WriterEvent.RESULT_STATUS: mm_constants.ResultStatusApp.detected,
