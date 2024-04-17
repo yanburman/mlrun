@@ -232,7 +232,7 @@ class TestAlerts(TestMLRunSystem):
             trigger={"events": [event_name]},
             criteria=criteria,
             notifications=notifications,
-        ).dict()
+        )
 
         mlrun.get_run_db().store_alert_config(name, alert_data)
 
