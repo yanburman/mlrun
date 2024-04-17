@@ -190,7 +190,7 @@ class ModelMonitoringWriter(StepToDict):
             )
             event_data = mlrun.common.schemas.Event(
                 kind=event_kind, entity=entity, value=drift_value
-            ).dict()
+            )
             mlrun.get_run_db().generate_event(event_kind, event_data)
 
     @staticmethod
