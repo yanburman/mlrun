@@ -655,15 +655,22 @@ class RunDBInterface(ABC):
         pass
 
     @abstractmethod
-    def generate_event(self, name, event_data, project=""):
+    def generate_event(
+        self, name: str, event_data: Union[dict, mlrun.common.schemas.Event], project=""
+    ):
         pass
 
     @abstractmethod
-    def store_alert_config(self, alert_name, alert_data, project=""):
+    def store_alert_config(
+        self,
+        alert_name: str,
+        alert_data: Union[dict, mlrun.common.schemas.AlertConfig],
+        project="",
+    ):
         pass
 
     @abstractmethod
-    def get_alert_config(self, alert_name, project=""):
+    def get_alert_config(self, alert_name: str, project=""):
         pass
 
     @abstractmethod
@@ -671,11 +678,11 @@ class RunDBInterface(ABC):
         pass
 
     @abstractmethod
-    def delete_alert_config(self, alert_name, project=""):
+    def delete_alert_config(self, alert_name: str, project=""):
         pass
 
     @abstractmethod
-    def reset_alert_config(self, alert_name, project=""):
+    def reset_alert_config(self, alert_name: str, project=""):
         pass
 
     @abstractmethod

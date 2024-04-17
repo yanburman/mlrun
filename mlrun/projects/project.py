@@ -3803,16 +3803,18 @@ class MlrunProject(ModelObj):
         Create/modify an alert.
         :param alert_data: the data of the alert.
         :param alert_name: name of the alert.
+        :return: the created/modified alert.
         """
         db = mlrun.db.get_run_db(secrets=self._secrets)
         if alert_name is None:
             alert_name = alert_data.name
         return db.store_alert_config(alert_name, alert_data.dict(), self.metadata.name)
 
-    def get_alert_config(self, alert_name):
+    def get_alert_config(self, alert_name: str) -> AlertConfig:
         """
         Retrieve an alert.
         :param alert_name: name of the alert to retrieve.
+        :return: the alert object.
         """
         db = mlrun.db.get_run_db(secrets=self._secrets)
         return db.get_alert_config(alert_name, self.metadata.name)
@@ -3820,11 +3822,14 @@ class MlrunProject(ModelObj):
     def list_alerts_configs(self):
         """
         Retrieve list of alerts of a project.
+        :return: all the alerts objects of the project.
         """
         db = mlrun.db.get_run_db(secrets=self._secrets)
         return db.list_alerts_configs(self.metadata.name)
 
-    def delete_alert_config(self, alert_data: AlertConfig = None, alert_name=None):
+    def delete_alert_config(
+        self, alert_data: AlertConfig = None, alert_name: str = None
+    ):
         """
         Delete an alert.
         :param alert_data: the data of the alert.
@@ -3834,12 +3839,16 @@ class MlrunProject(ModelObj):
             raise ValueError(
                 "At least one of alert_data or alert_name must be provided"
             )
+        if alert_data and alert_name and alert_data.name != alert_name:
+            raise ValueError("Alert_data name does not match the provided alert_name")
         db = mlrun.db.get_run_db(secrets=self._secrets)
         if alert_data:
             alert_name = alert_data.name
-        return db.delete_alert_config(alert_name, self.metadata.name)
+        db.delete_alert_config(alert_name, self.metadata.name)
 
-    def reset_alert_config(self, alert_data=None, alert_name=None):
+    def reset_alert_config(
+        self, alert_data: AlertConfig = None, alert_name: str = None
+    ):
         """
         Reset an alert.
         :param alert_data: the data of the alert.
@@ -3849,10 +3858,12 @@ class MlrunProject(ModelObj):
             raise ValueError(
                 "At least one of alert_data or alert_name must be provided"
             )
+        if alert_data and alert_name and alert_data.name != alert_name:
+            raise ValueError("Alert_data name does not match the provided alert_name")
         db = mlrun.db.get_run_db(secrets=self._secrets)
         if alert_data:
             alert_name = alert_data.name
-        return db.reset_alert_config(alert_name, self.metadata.name)
+        db.reset_alert_config(alert_name, self.metadata.name)
 
     def _run_authenticated_git_action(
         self,

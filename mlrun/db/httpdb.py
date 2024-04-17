@@ -3823,7 +3823,9 @@ class HTTPRunDB(RunDBInterface):
                 default_docker_registry=config.httpdb.builder.docker_registry,
             )
 
-    def generate_event(self, name, event_data, project=""):
+    def generate_event(
+        self, name: str, event_data: Union[dict, mlrun.common.schemas.Event], project=""
+    ):
         """
         Generate an event.
         :param name: name of the event.
@@ -3833,25 +3835,35 @@ class HTTPRunDB(RunDBInterface):
         project = project or config.default_project
         endpoint_path = f"projects/{project}/events/{name}"
         error_message = f"post event {project}/events/{name}"
-        body = _as_json(event_data)
-        self.api_call("POST", endpoint_path, error_message, body=body)
+        if isinstance(event_data, mlrun.common.schemas.Event):
+            event_data = event_data.dict()
+        self.api_call(
+            "POST", endpoint_path, error_message, body=dict_to_json(event_data)
+        )
 
-    def store_alert_config(self, alert_name, alert_data, project=""):
+    def store_alert_config(
+        self,
+        alert_name: str,
+        alert_data: Union[dict, mlrun.common.schemas.AlertConfig],
+        project="",
+    ):
         """
         Create/modify an alert.
         :param alert_name: name of the alert.
         :param alert_data: the data of the alert.
         :param project: project that the alert belongs to.
-        return: the created/modified alert.
+        :return: the created/modified alert.
         """
         project = project or config.default_project
         endpoint_path = f"projects/{project}/alerts/{alert_name}"
         error_message = f"put alert {project}/alerts/{alert_name}"
+        if isinstance(alert_data, mlrun.common.schemas.AlertConfig):
+            alert_data = alert_data.dict()
         body = _as_json(alert_data)
         response = self.api_call("PUT", endpoint_path, error_message, body=body)
-        return response.json()
+        return mlrun.common.schemas.AlertConfig(**response.json())
 
-    def get_alert_config(self, alert_name, project=""):
+    def get_alert_config(self, alert_name: str, project=""):
         """
         Retrieve an alert.
         :param alert_name: name of the alert to retrieve.
@@ -3862,7 +3874,7 @@ class HTTPRunDB(RunDBInterface):
         endpoint_path = f"projects/{project}/alerts/{alert_name}"
         error_message = f"get alert {project}/alerts/{alert_name}"
         response = self.api_call("GET", endpoint_path, error_message)
-        return response.json()
+        return mlrun.common.schemas.AlertConfig(**response.json())
 
     def list_alerts_configs(self, project=""):
         """
@@ -3873,10 +3885,13 @@ class HTTPRunDB(RunDBInterface):
         project = project or config.default_project
         endpoint_path = f"projects/{project}/alerts"
         error_message = f"get alerts {project}/alerts"
-        response = self.api_call("GET", endpoint_path, error_message)
-        return response.json()
+        response = self.api_call("GET", endpoint_path, error_message).json()
+        results = []
+        for item in response:
+            results.append(mlrun.common.schemas.AlertConfig(**item))
+        return results
 
-    def delete_alert_config(self, alert_name, project=""):
+    def delete_alert_config(self, alert_name: str, project=""):
         """
         Delete an alert.
         :param alert_name: name of the alert to delete.
@@ -3887,7 +3902,7 @@ class HTTPRunDB(RunDBInterface):
         error_message = f"delete alert {project}/alerts/{alert_name}"
         self.api_call("DELETE", endpoint_path, error_message)
 
-    def reset_alert_config(self, alert_name, project=""):
+    def reset_alert_config(self, alert_name: str, project=""):
         """
         Reset an alert.
         :param alert_name: name of the alert to reset.
