@@ -120,3 +120,25 @@ class AlertConfig(pydantic.BaseModel):
 class AlertsModes(StrEnum):
     enabled = "enabled"
     disabled = "disabled"
+
+
+class AlertTemplate(
+    pydantic.BaseModel
+):  # Template fields that are not shared with created configs
+    template_id: int = None
+    template_name: str
+    template_description: Optional[str] = (
+        "String explaining the purpose of this template"
+    )
+
+    # A property identifying templates that were created by the system and cannot be modified/deleted by the user
+    system_generated: bool = False
+
+    # AlertConfig fields that are pre-defined
+    description: Optional[str] = (
+        "String to be sent in the notifications generated e.g. 'Model {{ $project }}/{{ $entity }} is drifting.'"
+    )
+    severity: AlertSeverity
+    trigger: AlertTrigger
+    criteria: Optional[AlertCriteria]
+    reset_policy: ResetPolicy = ResetPolicy.MANUAL

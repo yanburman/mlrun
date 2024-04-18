@@ -129,7 +129,7 @@ def init_data(
 data_version_prior_to_table_addition = 1
 
 # NOTE: Bump this number when adding a new data migration
-latest_data_version = 5
+latest_data_version = 6
 
 
 def update_default_configuration_data():
@@ -138,6 +138,7 @@ def update_default_configuration_data():
     try:
         db = server.api.db.sqldb.db.SQLDB()
         _add_default_hub_source_if_needed(db, db_session)
+        _migrate_alert_templates_table(db, db_session)
     finally:
         close_session(db_session)
 
@@ -229,6 +230,8 @@ def _perform_data_migrations(db_session: sqlalchemy.orm.Session):
                 _perform_version_4_data_migrations(db, db_session)
             if current_data_version < 5:
                 _perform_version_5_data_migrations(db, db_session)
+            if current_data_version < 6:
+                _perform_version_6_data_migrations(db, db_session)
             db.create_data_version(db_session, str(latest_data_version))
 
 
@@ -819,6 +822,49 @@ def _delete_state_file():
         os.remove(config.artifacts.artifact_migration_state_file_path)
     except FileNotFoundError:
         pass
+
+
+def _perform_version_6_data_migrations(
+    db: server.api.db.sqldb.db.SQLDB, db_session: sqlalchemy.orm.Session
+):
+    _migrate_alert_templates_table(db, db_session)
+
+
+def _migrate_alert_templates_table(
+    db: server.api.db.sqldb.db.SQLDB, db_session: sqlalchemy.orm.Session
+):
+    pre_defined_templates = [
+        mlrun.common.schemas.AlertTemplate(
+            template_name="JobFailed",
+            template_description="Generic template for job failure alerts",
+            system_generated=True,
+            description="A job has failed",
+            severity=mlrun.common.schemas.alert.AlertSeverity.MEDIUM,
+            trigger={"events": [mlrun.common.schemas.alert.EventKind.FAILED]},
+            reset_policy=mlrun.common.schemas.alert.ResetPolicy.MANUAL,
+        ),
+        mlrun.common.schemas.AlertTemplate(
+            template_name="DriftDetected",
+            template_description="Generic template for drift detected alerts",
+            system_generated=True,
+            description="A model drift has been detected",
+            severity=mlrun.common.schemas.alert.AlertSeverity.HIGH,
+            trigger={"events": [mlrun.common.schemas.alert.EventKind.DRIFT_DETECTED]},
+            reset_policy=mlrun.common.schemas.alert.ResetPolicy.MANUAL,
+        ),
+        mlrun.common.schemas.AlertTemplate(
+            template_name="DriftSuspected",
+            template_description="Generic template for drift suspected alerts",
+            system_generated=True,
+            description="A model drift is suspected",
+            severity=mlrun.common.schemas.alert.AlertSeverity.MEDIUM,
+            trigger={"events": [mlrun.common.schemas.alert.EventKind.DRIFT_SUSPECTED]},
+            reset_policy=mlrun.common.schemas.alert.ResetPolicy.MANUAL,
+        ),
+    ]
+
+    for template in pre_defined_templates:
+        db.store_alert_template(db_session, template)
 
 
 def main() -> None:
