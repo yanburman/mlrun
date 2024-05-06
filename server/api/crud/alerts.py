@@ -46,12 +46,7 @@ class Alerts(
         if alert is not None:
             self._delete_notifications(alert)
 
-        alert_data.notifications = [
-            mlrun.common.schemas.notification.Notification(**notification.to_dict())
-            for notification in server.api.api.utils.validate_and_mask_notification_list(
-                alert_data.notifications, None, project
-            )
-        ]
+        self._validate_and_mask_notificatsions(alert_data)
 
         if alert is not None:
             for kind in alert.trigger.events:
@@ -219,17 +214,18 @@ class Alerts(
                 f"Invalid period ({alert.criteria.period}) specified for alert {name} for project {project}"
             )
 
-        for notification in alert.notifications:
-            if notification.kind not in [
+        for alert_notification in alert.notifications:
+            if alert_notification.notification.kind not in [
                 mlrun.common.schemas.NotificationKind.git,
                 mlrun.common.schemas.NotificationKind.slack,
                 mlrun.common.schemas.NotificationKind.webhook,
             ]:
                 raise mlrun.errors.MLRunBadRequestError(
-                    f"Unsupported notification ({notification.kind}) for alert {name} for project {project}"
+                    f"Unsupported notification ({alert_notification.notification.kind}) "
+                    "for alert {name} for project {project}"
                 )
             notification_object = mlrun.model.Notification.from_dict(
-                notification.dict()
+                alert_notification.notification.dict()
             )
             notification_object.validate_notification()
 
@@ -266,5 +262,23 @@ class Alerts(
     def _delete_notifications(self, alert: mlrun.common.schemas.AlertConfig):
         for notification in alert.notifications:
             server.api.api.utils.delete_notification_params_secret(
-                alert.project, notification
+                alert.project, notification.notification
             )
+
+    def _validate_and_mask_notificatsions(self, alert_data):
+        notifications = [
+            mlrun.common.schemas.notification.Notification(**notification.to_dict())
+            for notification in server.api.api.utils.validate_and_mask_notification_list(
+                alert_data.get_notifications(), None, alert_data.project
+            )
+        ]
+        cooldowns = [
+            notification.cooldown_period for notification in alert_data.notifications
+        ]
+
+        alert_data.notifications = [
+            mlrun.common.schemas.alert.AlertNotification(
+                **{"cooldown_period": cooldown, "notification": notification}
+            )
+            for cooldown, notification in zip(cooldowns, notifications)
+        ]
